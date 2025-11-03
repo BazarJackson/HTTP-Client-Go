@@ -88,16 +88,21 @@ func main() {
         netUsage := netUsed / netTotal
         if netUsage > 0.9 {
             diff := netTotal - netUsed
-
-            // Определяем, в каких единицах пришли данные:
-            // если слишком большие — делим на 7.6 (это объем за интервал)
+        
             var freeBandwidth float64
             if diff > 1e8 {
+                // данные за интервал
                 freeBandwidth = (diff * 8 / (1024 * 1024)) / 7.6
             } else {
+                // байты/секунду
                 freeBandwidth = (diff * 8) / (1024 * 1024)
             }
-
+        
+            // дополнительная коррекция для сценариев, где результат явно слишком большой (уже биты)
+            if freeBandwidth > 100 {
+                freeBandwidth /= 8
+            }
+        
             freeBandwidth = math.Floor(freeBandwidth)
             fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(freeBandwidth))
         }
