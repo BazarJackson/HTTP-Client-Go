@@ -96,7 +96,7 @@ func main() {
 		}
 
 		if totalMem > 0 {
-			memUsage := usedMem / totalMem
+			memUsage := int((float64(usedMem) / float64(totalMem)) * 100)
 			if memUsage > memUsageThreshold {
 				fmt.Printf("Memory usage too high: %.0f%%\n", memUsage*100)
 			}
