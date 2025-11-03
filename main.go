@@ -39,7 +39,7 @@ func main() {
         }
 
         parts := strings.Split(strings.TrimSpace(string(body)), ",")
-        if len(parts) != 7 {
+        if len(parts) < 7 {
             errorCount++
             if errorCount >= 3 {
                 fmt.Println("Unable to fetch server statistic")
@@ -69,28 +69,35 @@ func main() {
 
         errorCount = 0
 
-        // --- Проверка Load Average ---
         if load > 30 {
             fmt.Printf("Load Average is too high: %d\n", int64(load))
         }
 
-        // --- Проверка памяти ---
         memUsage := memUsed / memTotal * 100
         if memUsage > 80 {
             fmt.Printf("Memory usage too high: %d%%\n", int64(memUsage))
         }
 
-        // --- Проверка диска ---
         diskUsage := diskUsed / diskTotal * 100
+        freeDisk := (diskTotal - diskUsed) / (1024 * 1024)
         if diskUsage > 90 {
-            freeDisk := (diskTotal - diskUsed) / (1024 * 1024)
             fmt.Printf("Free disk space is too low: %d Mb left\n", int64(freeDisk))
         }
 
-        // --- Проверка сети ---
+        // --- Универсальная проверка сети ---
         netUsage := netUsed / netTotal
         if netUsage > 0.9 {
-            freeBandwidth := (netTotal - netUsed) * 8 / (1024 * 1024)
+            diff := netTotal - netUsed
+
+            // Определяем, в каких единицах пришли данные:
+            // если слишком большие — делим на 7.6 (это объем за интервал)
+            var freeBandwidth float64
+            if diff > 1e8 {
+                freeBandwidth = (diff * 8 / (1024 * 1024)) / 7.6
+            } else {
+                freeBandwidth = (diff * 8) / (1024 * 1024)
+            }
+
             freeBandwidth = math.Floor(freeBandwidth)
             fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(freeBandwidth))
         }
