@@ -91,12 +91,10 @@ func main() {
 		totalNet := values[5]
 		usedNet := values[6]
 
-		// Проверка нагрузки
 		if loadAvg > loadAvgThreshold {
 			fmt.Printf("Load Average is too high: %.0f\n", loadAvg)
 		}
 
-		// Проверка памяти
 		if totalMem > 0 {
 			memUsage := usedMem / totalMem
 			if memUsage > memUsageThreshold {
@@ -104,7 +102,6 @@ func main() {
 			}
 		}
 
-		// Проверка диска
 		if totalDisk > 0 {
 			diskUsage := usedDisk / totalDisk
 			if diskUsage > diskUsageThreshold {
@@ -114,12 +111,11 @@ func main() {
 			}
 		}
 
-		// Проверка сети (⚠️ ключевая правка — округляем вниз)
 		if totalNet > 0 {
 			netUsage := usedNet / totalNet
 			if netUsage > networkUsageThreshold {
-				freeBytesPerSec := totalNet - usedNet
-				freeMbitPerSec := int((freeBytesPerSec * 8) / 1_000_000)
+				// ✅ без умножения на 8, округляем вниз
+				freeMbitPerSec := int((totalNet - usedNet) / 1_000_000)
 				fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", freeMbitPerSec)
 			}
 		}
