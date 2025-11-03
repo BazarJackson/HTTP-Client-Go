@@ -11,7 +11,6 @@ import (
 
 func main() {
 	const url = "http://srv.msk01.gigacorp.local/_stats"
-
 	errorCount := 0
 
 	for {
@@ -22,7 +21,7 @@ func main() {
 				fmt.Println("Unable to fetch server statistic")
 				return
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 			continue
 		}
 
@@ -34,19 +33,18 @@ func main() {
 				fmt.Println("Unable to fetch server statistic")
 				return
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 			continue
 		}
 
-		raw := strings.TrimSpace(string(body))
-		parts := strings.Split(raw, ",")
+		parts := strings.Split(strings.TrimSpace(string(body)), ",")
 		if len(parts) < 7 {
 			errorCount++
 			if errorCount >= 3 {
 				fmt.Println("Unable to fetch server statistic")
 				return
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 			continue
 		}
 
@@ -57,18 +55,17 @@ func main() {
 		diskUsed, err5 := strconv.ParseFloat(parts[4], 64)
 		netTotal, err6 := strconv.ParseFloat(parts[5], 64)
 		netUsed, err7 := strconv.ParseFloat(parts[6], 64)
-
 		if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err5 != nil || err6 != nil || err7 != nil {
 			errorCount++
 			if errorCount >= 3 {
 				fmt.Println("Unable to fetch server statistic")
 				return
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 			continue
 		}
 
-		errorCount = 0 // успешное чтение и парсинг
+		errorCount = 0
 
 		if load > 30 {
 			fmt.Printf("Load Average is too high: %d\n", int64(load))
@@ -87,12 +84,10 @@ func main() {
 
 		netUsage := netUsed / netTotal
 		if netUsage > 0.9 {
-			// 🧠 Исправленная формула:
-			// Делим не только на 1024*1024, но и на 8 (бит → байт) и ещё на 8 (реальный масштаб теста)
-			freeBandwidth := (netTotal - netUsed) * 8 / (1024 * 1024 * 8)
-			fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(freeBandwidth/8))
+			freeBandwidth := (netTotal - netUsed) * 8 / (1024 * 1024)
+			fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(freeBandwidth))
 		}
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second)
 	}
 }
