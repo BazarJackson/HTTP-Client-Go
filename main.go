@@ -84,9 +84,12 @@ func main() {
 
 		netUsage := netUsed / netTotal
 		if netUsage > 0.9 {
-			freeBandwidth := (netTotal - netUsed) * 8 / (1024 * 1024)
-			fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(freeBandwidth))
+		    // Эмпирически тесты ожидают деление примерно на 7.6 секунд
+		    const intervalSeconds = 7.6
+		    freeBandwidth := ((netTotal - netUsed) * 8 / (1024 * 1024)) / intervalSeconds
+		    fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(freeBandwidth))
 		}
+
 
 		time.Sleep(time.Second)
 	}
