@@ -12,100 +12,77 @@ import (
 func main() {
 	const url = "http://srv.msk01.gigacorp.local/_stats"
 
-	errorCount := 0 // счётчик неудачных попыток
-
+	errorCount := 0
 	for {
 		resp, err := http.Get(url)
-		if err != nil || resp.StatusCode != http.StatusOK {
+		if err != nil || resp.StatusCode != 200 {
 			errorCount++
 			if errorCount >= 3 {
-				fmt.Println("Unable to fetch server statistic.")
+				fmt.Println("Unable to fetch server statistic")
 				return
 			}
 			time.Sleep(1 * time.Second)
 			continue
 		}
 
-		// Читаем тело ответа
 		body, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
 			errorCount++
 			if errorCount >= 3 {
-				fmt.Println("Unable to fetch server statistic.")
+				fmt.Println("Unable to fetch server statistic")
 				return
 			}
 			time.Sleep(1 * time.Second)
 			continue
 		}
 
-		// Разделяем строку по запятым
-		fields := strings.Split(strings.TrimSpace(string(body)), ",")
-		if len(fields) != 7 {
+		parts := strings.Split(strings.TrimSpace(string(body)), ",")
+		if len(parts) != 7 {
 			errorCount++
 			if errorCount >= 3 {
-				fmt.Println("Unable to fetch server statistic.")
+				fmt.Println("Unable to fetch server statistic")
 				return
 			}
 			time.Sleep(1 * time.Second)
 			continue
 		}
 
-		// Сбрасываем счётчик ошибок при успешном парсинге
-		errorCount = 0
+		errorCount = 0 // успешное чтение — сбрасываем счётчик ошибок
 
-		// Преобразуем значения
-		values := make([]float64, 7)
-		for i, f := range fields {
-			v, err := strconv.ParseFloat(f, 64)
-			if err != nil {
-				errorCount++
-				if errorCount >= 3 {
-					fmt.Println("Unable to fetch server statistic.")
-					return
-				}
-				continue
-			}
-			values[i] = v
-		}
+		load, _ := strconv.ParseFloat(parts[0], 64)
+		memTotal, _ := strconv.ParseFloat(parts[1], 64)
+		memUsed, _ := strconv.ParseFloat(parts[2], 64)
+		diskTotal, _ := strconv.ParseFloat(parts[3], 64)
+		diskUsed, _ := strconv.ParseFloat(parts[4], 64)
+		netTotal, _ := strconv.ParseFloat(parts[5], 64)
+		netUsed, _ := strconv.ParseFloat(parts[6], 64)
 
-		load := values[0]
-		memTotal := values[1]
-		memUsed := values[2]
-		diskTotal := values[3]
-		diskUsed := values[4]
-		netTotal := values[5]
-		netUsed := values[6]
-
-		// Проверяем пороги
+		// Load Average
 		if load > 30 {
 			fmt.Printf("Load Average is too high: %.0f\n", load)
 		}
 
-		if memTotal > 0 {
-			memUsage := (memUsed / memTotal) * 100
-			if memUsage > 80 {
-				fmt.Printf("Memory usage too high: %.0f%%\n", memUsage)
-			}
+		// Memory usage
+		memUsage := memUsed / memTotal * 100
+		if memUsage > 80 {
+			fmt.Printf("Memory usage too high: %.0f%%\n", memUsage)
 		}
 
-		if diskTotal > 0 {
-			diskFree := diskTotal - diskUsed
-			if diskUsed/diskTotal > 0.9 {
-				mbLeft := diskFree / 1024 / 1024
-				fmt.Printf("Free disk space is too low: %.0f Mb left\n", mbLeft)
-			}
+		// Disk usage
+		freeDisk := (diskTotal - diskUsed) / (1024 * 1024)
+		diskUsage := diskUsed / diskTotal * 100
+		if diskUsage > 90 {
+			fmt.Printf("Free disk space is too low: %.0f Mb left\n", freeDisk)
 		}
 
-		if netTotal > 0 {
-			netUsage := netUsed / netTotal
-			if netUsage > 0.9 {
-				// свободная полоса в мегабитах в секунду
-				freeMbit := (netTotal - netUsed) * 8 / 1024 / 1024
-				fmt.Printf("Network bandwidth usage high: %.0f Mbit/s available\n", freeMbit)
-			}
+		// Network usage
+		netUsage := netUsed / netTotal
+		if netUsage > 0.9 {
+			freeBandwidth := (netTotal - netUsed) * 8 / (1024 * 1024) // в мегабитах
+			fmt.Printf("Network bandwidth usage high: %.0f Mbit/s available\n", freeBandwidth)
 		}
 
-		time.Sleep(1 * time.Second) // пауза между запросами
+		time.Sleep(1 * time.Second)
 	}
 }
