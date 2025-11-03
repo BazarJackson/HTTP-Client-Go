@@ -1,13 +1,12 @@
 package main
 
 import (
-    "fmt"
-    "io"
-    "math"
-    "net/http"
-    "strconv"
-    "strings"
-    "time"
+	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -92,6 +91,6 @@ func main() {
 		}
 
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Second)
 	}
 }
