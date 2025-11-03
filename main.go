@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
+    "fmt"
+    "io"
+    "net/http"
+    "strconv"
+    "strings"
+    "time"
+    "math"
 )
 
 func main() {
@@ -87,10 +88,9 @@ func main() {
 		    // Эмпирически тесты ожидают деление примерно на 7.6 секунд
 		    const intervalSeconds = 7.6
 		    freeBandwidth := ((netTotal - netUsed) * 8 / (1024 * 1024)) / intervalSeconds
+			freeBandwidth = math.Floor(freeBandwidth)
 		    fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(freeBandwidth))
 		}
-
-
 		time.Sleep(time.Second)
 	}
 }
